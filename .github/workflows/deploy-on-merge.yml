@@ -1,0 +1,47 @@
+name: Deploy on merge
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+#on:
+#  push:
+#    branches:
+#      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: npm install
+      - name: Build project
+        run: npm run build
+      - name: Upload build output
+        uses: actions/upload-artifact@v3
+        with:
+          name: output
+          path: .output
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Download build output previous job
+        uses: actions/download-artifact@v3
+        with:
+          name: output
+          path: .output
+      - name: Hotfix dependencies for Firebase Functions
+        run: npm install --prefix .output/server
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@v11.9.0
+        with:
+          args: deploy --only hosting,functions --message \"${{ github.event.head_commit.message }}\"
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}

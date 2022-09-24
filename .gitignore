@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+
+# Logs
+*.log*
+
+# Nuxt
+.nuxt
+.nitro
+.cache
+.output
+
+# Firebase
+.firebase
+
+# IDE
+.idea
